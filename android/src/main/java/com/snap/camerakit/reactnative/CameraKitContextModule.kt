@@ -15,12 +15,8 @@ import com.snap.camerakit.SafeRenderAreaProcessor
 import com.snap.camerakit.Session
 import com.snap.camerakit.Source
 import com.snap.camerakit.common.Consumer
-import com.snap.camerakit.configureLenses
 import com.snap.camerakit.invoke
 import com.snap.camerakit.lenses.LensesComponent
-import com.snap.camerakit.lenses.configureCarousel
-import com.snap.camerakit.lenses.configureHints
-import com.snap.camerakit.lenses.configureLoadingOverlay
 import com.snap.camerakit.lenses.newBuilder
 import com.snap.camerakit.support.camerax.CameraXImageProcessorSource
 import java.io.Closeable
@@ -153,12 +149,6 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) : ReactConte
             attachTo(touchViewContainer.touchViewStub, false)
             imageProcessorSource(imageProcessorSource)
             safeRenderAreaProcessorSource(safeRenderAreaProcessor)
-            // Disable default Camera Kit lenses UI.
-            configureLenses { builder ->
-                builder.configureLoadingOverlay { it.enabled = false }
-                builder.configureCarousel { it.enabled = false }
-                builder.configureHints { it.enabled = false }
-            }
             handleErrorsWith { item ->
                 eventEmitter.sendError(item)
             }
