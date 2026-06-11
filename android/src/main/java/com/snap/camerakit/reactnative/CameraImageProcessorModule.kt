@@ -1,5 +1,6 @@
 package com.snap.camerakit.reactnative
 
+import androidx.camera.core.Camera
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -19,6 +20,7 @@ class CameraImageProcessorModule(reactContext: ReactApplicationContext) : ReactC
     var mirrorFramesHorizontally = false
     var mirrorFramesVertically = false
     var crop: ImageProcessor.Input.Option.Crop? = null
+    var cameraRef: Camera? = null
     val imageProcessorSource = CameraXImageProcessorSource(
         context = reactApplicationContext.applicationContext,
         lifecycleOwner = ProcessLifecycleOwner.get(),
@@ -55,7 +57,17 @@ class CameraImageProcessorModule(reactContext: ReactApplicationContext) : ReactC
         val configuration = AllowsCameraPreview.Configuration.Default(facingFront, aspectRatio, Crop.None)
         imageProcessorSource.startPreview(
             configuration, inputOptions
-        ) {}
+        ) { camera ->
+            cameraRef = camera
+        }
+    }
+
+    fun setZoom(zoom: Float) {
+        cameraRef?.cameraControl?.setLinearZoom(zoom)
+    }
+
+    fun setTorch(enabled: Boolean) {
+        cameraRef?.cameraControl?.enableTorch(enabled)
     }
 
     override fun getName() = NAME

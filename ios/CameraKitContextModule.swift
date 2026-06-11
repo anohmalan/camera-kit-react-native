@@ -226,6 +226,52 @@ class CameraKitContextModule: NSObject, LensRepositoryGroupObserver {
         }
     }
 
+    @objc public func setZoom(_ zoom: NSNumber,
+                              _ resolve: @escaping RCTPromiseResolveBlock,
+                              reject: @escaping RCTPromiseRejectBlock)
+    {
+        guard let device = avInput?.session.inputs
+            .compactMap({ $0 as? AVCaptureDeviceInput })
+            .first?.device else {
+            resolve(false)
+            return
+        }
+
+        do {
+            try device.lockForConfiguration()
+            let minZoom = device.minAvailableVideoZoomFactor
+            let maxZoom = device.maxAvailableVideoZoomFactor
+            let zoomFactor = minZoom + (maxZoom - minZoom) * CGFloat(truncating: zoom)
+            device.videoZoomFactor = max(minZoom, min(zoomFactor, maxZoom))
+            device.unlockForConfiguration()
+            resolve(true)
+        } catch {
+            resolve(false)
+        }
+    }
+
+    @objc public func setTorch(_ enabled: Bool,
+                               _ resolve: @escaping RCTPromiseResolveBlock,
+                               reject: @escaping RCTPromiseRejectBlock)
+    {
+        guard let device = avInput?.session.inputs
+            .compactMap({ $0 as? AVCaptureDeviceInput })
+            .first?.device,
+              device.hasTorch else {
+            resolve(false)
+            return
+        }
+
+        do {
+            try device.lockForConfiguration()
+            device.torchMode = enabled ? .on : .off
+            device.unlockForConfiguration()
+            resolve(true)
+        } catch {
+            resolve(false)
+        }
+    }
+
     @objc public func takeVideo(_ resolve: @escaping RCTPromiseResolveBlock,
                                 reject: @escaping RCTPromiseRejectBlock)
     {

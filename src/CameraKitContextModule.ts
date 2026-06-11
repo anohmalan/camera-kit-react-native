@@ -35,6 +35,8 @@ interface CameraKitContextModule {
     takeSnapshot(format: ImageFormats, quality: number): Promise<{ uri: string }>;
     takeVideo(): Promise<{ uri: string }>;
     stopTakingVideo(): Promise<boolean>;
+    setZoom(zoom: number): Promise<boolean>;
+    setTorch(enabled: boolean): Promise<boolean>;
 }
 
 /**

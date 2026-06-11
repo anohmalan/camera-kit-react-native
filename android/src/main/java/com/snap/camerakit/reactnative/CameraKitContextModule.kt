@@ -226,6 +226,20 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) : ReactConte
     }
 
     @ReactMethod
+    fun setZoom(zoom: Double, promise: Promise) {
+        reactApplicationContext.getNativeModule(CameraImageProcessorModule::class.java)
+            ?.setZoom(zoom.toFloat())
+        promise.resolve(true)
+    }
+
+    @ReactMethod
+    fun setTorch(enabled: Boolean, promise: Promise) {
+        reactApplicationContext.getNativeModule(CameraImageProcessorModule::class.java)
+            ?.setTorch(enabled)
+        promise.resolve(true)
+    }
+
+    @ReactMethod
     fun stopTakingVideo(promise: Promise) {
         if (videoRecording == null) {
             eventEmitter.sendWarning("Recording is not started.")

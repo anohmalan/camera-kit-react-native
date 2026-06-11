@@ -24,6 +24,14 @@ RCT_EXTERN_METHOD(takeSnapshot:(NSString *)format
                   :(RCTPromiseResolveBlock)resolve reject
                   :(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setZoom:(nonnull NSNumber *)zoom
+                  :(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(setTorch:(BOOL)enabled
+                  :(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(takeVideo:(RCTPromiseResolveBlock)resolve reject
                   :(RCTPromiseRejectBlock)reject)
 

@@ -153,6 +153,9 @@ export const useCameraKit = () => {
                     },
                 };
             },
+
+            setZoom: (zoom: number) => CameraKitReactNative.setZoom(zoom),
+            setTorch: (enabled: boolean) => CameraKitReactNative.setTorch(enabled),
         };
     }, [cameraKitState.isSessionReady]);
 };
