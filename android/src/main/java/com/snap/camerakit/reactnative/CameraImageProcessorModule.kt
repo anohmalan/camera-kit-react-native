@@ -62,9 +62,9 @@ class CameraImageProcessorModule(reactContext: ReactApplicationContext) : ReactC
     }
 
     fun setZoom(zoom: Float) {
-        try {
-            imageProcessorSource.setZoomRatio(zoom)
-        } catch (_: Exception) {}
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            imageProcessorSource.zoomBy(zoom)
+        }
     }
 
     fun setTorch(enabled: Boolean) {
