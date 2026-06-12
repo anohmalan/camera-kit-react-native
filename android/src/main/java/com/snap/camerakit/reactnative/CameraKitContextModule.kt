@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
 import android.graphics.Rect
-import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Handler
@@ -48,7 +47,6 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) :
     private var pcmFile: File? = null
     private var audioRecorder: MixedAudioRecorder? = null
 
-    private var mediaProjection: MediaProjection? = null
     private var mediaProjectionPromise: Promise? = null
 
     private var currentLenses = mapOf<String, LensesComponent.Lens>()
@@ -61,9 +59,16 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) :
         override fun onActivityResult(activity: Activity?, requestCode: Int, resultCode: Int, data: Intent?) {
             if (requestCode != MEDIA_PROJECTION_REQUEST_CODE) return
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && resultCode == Activity.RESULT_OK && data != null) {
-                val manager = reactApplicationContext.applicationContext
-                    .getSystemService(MediaProjectionManager::class.java)
-                mediaProjection = manager.getMediaProjection(resultCode, data)
+                // Start foreground service (required on Android 14+ before calling getMediaProjection)
+                val serviceIntent = Intent(reactApplicationContext, AudioCaptureService::class.java).apply {
+                    putExtra(AudioCaptureService.EXTRA_RESULT_CODE, resultCode)
+                    putExtra(AudioCaptureService.EXTRA_RESULT_DATA, data)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    reactApplicationContext.startForegroundService(serviceIntent)
+                } else {
+                    reactApplicationContext.startService(serviceIntent)
+                }
                 mediaProjectionPromise?.resolve(true)
             } else {
                 mediaProjectionPromise?.resolve(false)
@@ -230,7 +235,7 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) :
         videoRecordingPromise = promise
         currentVideoFile = videoFile
 
-        val projection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) mediaProjection else null
+        val projection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) AudioCaptureService.mediaProjection else null
 
         if (projection != null) {
             // Video only — audio captured separately via AudioPlaybackCapture + mic mix
