@@ -1,8 +1,5 @@
 package com.snap.camerakit.reactnative
 
-import android.content.Context
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -61,28 +58,22 @@ class CameraImageProcessorModule(reactContext: ReactApplicationContext) : ReactC
         ) {}
     }
 
+    private fun cameraControl(): androidx.camera.core.CameraControl? = try {
+        val f = CameraXImageProcessorSource::class.java.getDeclaredField("camera")
+        f.isAccessible = true
+        (f.get(imageProcessorSource) as? androidx.camera.core.Camera)?.cameraControl
+    } catch (_: Exception) { null }
+
     fun setZoom(zoom: Float) {
         android.os.Handler(android.os.Looper.getMainLooper()).post {
-            imageProcessorSource.zoomBy(zoom)
+            cameraControl()?.setLinearZoom(zoom)
         }
     }
 
     fun setTorch(enabled: Boolean) {
-        try {
-            val cameraManager = reactApplicationContext.applicationContext
-                .getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val cameraId = cameraManager.cameraIdList.firstOrNull { id ->
-                val chars = cameraManager.getCameraCharacteristics(id)
-                val flash = chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
-                val facing = chars.get(CameraCharacteristics.LENS_FACING)
-                flash && if (facingFront) {
-                    facing == CameraCharacteristics.LENS_FACING_FRONT
-                } else {
-                    facing == CameraCharacteristics.LENS_FACING_BACK
-                }
-            } ?: return
-            cameraManager.setTorchMode(cameraId, enabled)
-        } catch (_: Exception) {}
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            cameraControl()?.enableTorch(enabled)
+        }
     }
 
     override fun getName() = NAME
