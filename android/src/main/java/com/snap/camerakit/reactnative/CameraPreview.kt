@@ -2,6 +2,7 @@ package com.snap.camerakit.reactnative
 
 import android.annotation.SuppressLint
 import android.graphics.Rect
+import android.view.MotionEvent
 import android.view.TextureView
 import android.widget.FrameLayout
 import com.facebook.react.uimanager.ThemedReactContext
@@ -24,6 +25,15 @@ class CameraPreview(reactApplicationContext: ThemedReactContext) :
     init {
         inflate(context, R.layout.camera_kit_view, this)
         this.textureView = findViewById(R.id.ck_texture_view)
+        // Allow this view to receive touch events so Camera Kit's TouchViewContainer
+        // is included in Android's touch dispatch chain.
+        isClickable = true
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        // Fallback: forward to Camera Kit's touch handler when normal child dispatch
+        // fails (e.g. TouchViewContainer bounds not yet laid out on first render).
+        return cameraKitModule.touchViewContainer.dispatchTouchEvent(event)
     }
 
     fun restartPreview() {
