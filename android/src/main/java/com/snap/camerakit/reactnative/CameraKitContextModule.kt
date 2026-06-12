@@ -11,6 +11,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
+import com.snap.camerakit.MediaRecordingImageProcessors
 import com.snap.camerakit.SafeRenderAreaProcessor
 import com.snap.camerakit.Session
 import com.snap.camerakit.Source
@@ -34,6 +35,8 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) : ReactConte
     var touchViewContainer = TouchViewContainer(reactApplicationContext.applicationContext)
 
     private var videoRecording: Closeable? = null
+    private var videoRecordingPromise: Promise? = null
+    private var currentVideoFile: File? = null
     private var currentLenses = mapOf<String, LensesComponent.Lens>()
     private val imageProcessorSource: CameraXImageProcessorSource
         get() = reactApplicationContext.getNativeModule(CameraImageProcessorModule::class.java)!!.imageProcessorSource
@@ -211,18 +214,23 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) : ReactConte
             eventEmitter.sendWarning("Stop the previous recording before starting a new one.")
             return
         }
-
-        val onVideoAvailable: (File) -> Unit = { video ->
-            promise.resolve(
-                Arguments.makeNativeMap(
-                    mapOf(
-                        "uri" to video.toURI().toString()
-                    )
-                )
-            )
+        if (currentSession == null) {
+            promise.resolve(null)
+            return
         }
 
-        videoRecording = imageProcessorSource.takeVideo(onVideoAvailable)
+        val outputFile = File(
+            reactApplicationContext.applicationContext.cacheDir,
+            "ck_video_${System.currentTimeMillis()}.mp4"
+        )
+        videoRecordingPromise = promise
+        currentVideoFile = outputFile
+        videoRecording = MediaRecordingImageProcessors.connectOutput(
+            currentSession!!.processor,
+            outputFile,
+            1080, 1920,
+            true
+        )
     }
 
     @ReactMethod
@@ -249,6 +257,15 @@ class CameraKitContextModule(reactContext: ReactApplicationContext) : ReactConte
         try {
             videoRecording?.close()
             videoRecording = null
+
+            val file = currentVideoFile
+            currentVideoFile = null
+
+            videoRecordingPromise?.resolve(
+                Arguments.makeNativeMap(mapOf("uri" to file?.toURI()?.toString()))
+            )
+            videoRecordingPromise = null
+
             promise.resolve(true)
         } catch (error: IOException) {
             promise.reject(error)
