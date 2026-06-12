@@ -46,6 +46,8 @@ export const CameraKitContext: FC<CameraKitContextProps> = ({ apiToken, logLevel
             try {
                 await CameraKitReactNative.closeSession();
                 await CameraKitReactNative.createNewSession(apiToken);
+                // Request once — native module keeps the MediaProjection across JS remounts
+                await CameraKitReactNative.requestMediaProjection().catch(() => {});
 
                 if (isMounted()) {
                     setState((prevState) => ({ ...prevState, isSessionReady: true }));
