@@ -37,7 +37,6 @@ interface CameraKitContextModule {
     stopTakingVideo(): Promise<boolean>;
     setZoom(zoom: number): Promise<boolean>;
     setTorch(enabled: boolean): Promise<boolean>;
-    requestMediaProjection(): Promise<boolean>;
 }
 
 /**
